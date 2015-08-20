@@ -64,6 +64,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
@@ -83,6 +85,7 @@ public class InAppBrowser extends CordovaPlugin {
     private static final String CLEAR_ALL_CACHE = "clearcache";
     private static final String CLEAR_SESSION_CACHE = "clearsessioncache";
     private static final String HARDWARE_BACK_BUTTON = "hardwareback";
+    private static final Pattern CUSTOM_URL_SCHEME = Pattern.compile("^([A-Za-z0-9.-])*://(.*)");
 
     private InAppBrowserDialog dialog;
     private WebView inAppWebView;
@@ -816,6 +819,16 @@ public class InAppBrowser extends CordovaPlugin {
                     cordova.getActivity().startActivity(intent);
                 } catch (android.content.ActivityNotFoundException e) {
                     LOG.e(LOG_TAG, "Error sending sms " + url + ":" + e.toString());
+                }
+            }
+            // Support Custom-Url-Schemes
+            else if (CUSTOM_URL_SCHEME.matcher(url).matches()) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    cordova.getActivity().startActivity(intent);
+                } catch (android.content.ActivityNotFoundException e) {
+                    LOG.e(LOG_TAG, "Error starting intent for " + url + ":" + e.toString());
                 }
             }
             else {
